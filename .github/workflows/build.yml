@@ -6,44 +6,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install build-tools and accept licenses
-        run: |
-          yes | sdkmanager --licenses
-          sdkmanager "build-tools;30.0.3" "platforms;android-30" "platform-tools"
-
-      - name: Install buildozer
-        run: |
-          sudo apt-get install -y git zip unzip autoconf libtool \
-            pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev
-          pip install buildozer cython==0.29.37
-
       - name: Build APK
-        env:
-          BUILDOZER_WARN_ON_ROOT: "0"
-          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-        run: |
-          buildozer android debug
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: android debug
+          buildozer_version: stable
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: swillchat-apk
-          path: bin/*.apk
+          path: ${{ steps.buildozer.outputs.filename }}
