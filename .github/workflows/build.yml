@@ -15,17 +15,29 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk \
-            autoconf libtool pkg-config zlib1g-dev libncurses5-dev \
-            cmake libffi-dev libssl-dev
+          sudo apt-get install -y git zip unzip autoconf libtool \
+            pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev
           pip install buildozer cython==0.29.37
+
+      - name: Install Android SDK build-tools
+        run: |
+          sudo apt-get install -y android-sdk
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            "build-tools;33.0.2" "platforms;android-33" "platform-tools"
 
       - name: Build APK
         env:
           BUILDOZER_WARN_ON_ROOT: "0"
+          ANDROID_SDK_ROOT: /usr/lib/android-sdk
         run: |
           buildozer android debug
 
