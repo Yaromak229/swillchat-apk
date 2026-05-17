@@ -10,12 +10,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build with Kivy Docker
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install build-tools and accept licenses
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/home/user/hostcwd \
-            kivy/buildozer:latest \
-            android debug
+          yes | sdkmanager --licenses
+          sdkmanager "build-tools;30.0.3" "platforms;android-30" "platform-tools"
+          echo "aidl path: $(find /usr/local/lib/android/sdk -name aidl)"
+
+      - name: Install buildozer
+        run: |
+          sudo apt-get install -y git zip unzip autoconf libtool \
+            pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev
+          pip install buildozer cython==0.29.37
+
+      - name: Build APK
+        env:
+          BUILDOZER_WARN_ON_ROOT: "0"
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+        run: |
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
